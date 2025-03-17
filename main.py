@@ -133,12 +133,13 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
 
         # Render settings on the frame if enabled
         frame = render_settings(frame, settings)
+        # Resize the frame to fit the screen
+        frame = cv2.resize(frame, (2160, 3840), interpolation=cv2.INTER_LINEAR)
         # 1) Create a named window that allows resizing
         cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
         # 2) Resize the window to fit the screen size
-        screen_res = (2160, 3840)
-        cv2.resizeWindow("Computer Vision Demo", screen_res[0], screen_res[1])
-    
+        #screen_res = (2160, 3840)
+        #cv2.resizeWindow("Computer Vision Demo", screen_res[0], screen_res[1])
          # Set to full screen
         cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         # Display the processed frame
