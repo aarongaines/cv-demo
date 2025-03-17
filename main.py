@@ -136,6 +136,9 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
 
         # Display the processed frame
         cv2.imshow('', frame)
+
+        # Set to full screen
+        cv2.setWindowProperty('', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         
         # Handle key events for control buttons
         key = cv2.waitKey(1) & 0xFF
@@ -305,6 +308,13 @@ def main(webcams=None, ip_cams=None, videos=None, cam_source=0, pose_model='tiny
         segment_model (str): Segmentation model size
         device (str): Device to run models on
     """
+    # check available devices with torch
+    import torch
+    if device not in ['cpu', 'cuda'] or (device == 'cuda' and not torch.cuda.is_available()):
+        print(f"Invalid device '{device}' specified. Defaulting to 'cpu'.")
+        device = 'cpu'
+    print(f"Using device: {device}")
+    
     # Handle camera sources
     if webcams is None and ip_cams is None and videos is None:
         # If no lists are provided, use the single cam_source
