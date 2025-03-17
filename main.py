@@ -110,7 +110,9 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
         if isinstance(settings.current_camera(), int):
             frame = cv2.flip(frame, 1)
         # crop to portrait
-        frame = crop_to_portrait(frame)
+        #frame = crop_to_portrait(frame)
+        # Rotate the frame
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
         
         # Apply the function to the frame
         func = funcs[settings.func_index]  # Get the current function to apply
@@ -129,19 +131,15 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
             print(f"Switching to next function: {settings.func_index}")
             continue
 
-        
-
         # Render settings on the frame if enabled
         frame = render_settings(frame, settings)
-    # 1) Create a named window that allows resizing
+        # 1) Create a named window that allows resizing
         cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
          # Set to full screen
         cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         # Display the processed frame
         cv2.imshow('Computer Vision Demo', frame)
 
-       
-        
         # Handle key events for control buttons
         key = cv2.waitKey(1) & 0xFF
         if key == 27:  # ESC key to exit
