@@ -133,12 +133,14 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
 
         # Render settings on the frame if enabled
         frame = render_settings(frame, settings)
-
+    # 1) Create a named window that allows resizing
+        cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
+         # Set to full screen
+        cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         # Display the processed frame
-        cv2.imshow('', frame)
+        cv2.imshow('Computer Vision Demo', frame)
 
-        # Set to full screen
-        cv2.setWindowProperty('', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+       
         
         # Handle key events for control buttons
         key = cv2.waitKey(1) & 0xFF
