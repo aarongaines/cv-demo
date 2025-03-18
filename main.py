@@ -107,7 +107,9 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
     if not cap.isOpened():
         print(f"Error: Could not open camera {settings.current_camera()}")
         return
-    
+    # Set the camera properties if needed (e.g., resolution)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
     print("Streaming...")
     print(f"Camera: {settings.camera_names[settings.cam_index]}")
     print("Started with tracking" if settings.tracking_enabled else "Started without tracking")
