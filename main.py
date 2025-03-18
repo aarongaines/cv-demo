@@ -3,7 +3,7 @@ import argparse
 import os
 
 import cv2
-from ultralytics.models.yolo import detect
+import numpy as np
 
 from model_funcs import load_model, pose_and_detect, segment, pose_detect_track, PlotConfig, AppSettings
 
@@ -37,33 +37,53 @@ def render_settings(frame, settings: AppSettings):
     alpha = 0.7
     return cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0)
 
-def crop_to_portrait(frame, ratio=9/16):
+def resize_pad(frame, target_size=(2160, 3840)):
     """
-    Crop a landscape frame to portrait orientation by cutting off the sides.
+    Resize and pad the frame to fit the target size while maintaining aspect ratio.
     
     Args:
-        frame: Input landscape frame
-        ratio: Width to height ratio (default: 9/16 for portrait)
-        
+        frame (numpy.ndarray): Input frame to resize and pad.
+        target_size (tuple): Desired output size (width, height).
+    
     Returns:
-        Portrait cropped frame
+        numpy.ndarray: Resized and padded frame.
     """
-    h, w = frame.shape[:2]  # Get height and width
+    h, w = frame.shape[:2]
+    target_w, target_h = target_size
     
-    # Calculate the target width for the portrait aspect ratio
-    target_width = int(h * ratio)
+    # Calculate the scaling factor
+    scale = min(target_w / w, target_h / h)
     
-    # If the original frame is already narrower than our target, return as is
-    if w <= target_width:
-        return frame
+    # Resize the frame
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+    resized_frame = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
     
-    # Calculate the starting x-coordinate to crop from center
-    x_start = (w - target_width) // 2
+    # Create a padded frame
+    padded_frame = cv2.copyMakeBorder(resized_frame, 
+                                      0, target_h - new_h, 
+                                      0, target_w - new_w, 
+                                      cv2.BORDER_CONSTANT, 
+                                      value=(0, 0, 0))
     
-    # Crop the frame
-    cropped_frame = frame[:, x_start:x_start+target_width]
-    
-    return cropped_frame
+    return padded_frame
+
+
+def resize_and_pad(image, target_size=(2160, 3840)):
+    h, w, _ = image.shape
+    scale = min(target_size[0] / h, target_size[1] / w)
+    new_w = int(w * scale)
+    new_h = int(h * scale)
+
+    resized_image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+
+    padded_image = np.zeros((target_size[0], target_size[1], 3), dtype=np.uint8)
+    pad_w = (target_size[1] - new_w) // 2
+    pad_h = (target_size[0] - new_h) // 2
+
+    padded_image[pad_h:pad_h+new_h, pad_w:pad_w+new_w, :] = resized_image
+
+    return padded_image
 
 
 def run_cam(settings: AppSettings, funcs: List[Callable]):
@@ -91,7 +111,8 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
     print("Streaming...")
     print(f"Camera: {settings.camera_names[settings.cam_index]}")
     print("Started with tracking" if settings.tracking_enabled else "Started without tracking")
-    
+    #print cap size
+    print(f"Camera size: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)} x {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
     while True:
         ret, frame = cap.read()
         if not ret:

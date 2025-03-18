@@ -11,3 +11,6 @@ wheels/
 
 #Models
 *.pt
+
+# Camera Config
+camera_config.json
