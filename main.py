@@ -110,6 +110,8 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
     # Set the camera properties if needed (e.g., resolution)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+    cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
+    cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     print("Streaming...")
     print(f"Camera: {settings.camera_names[settings.cam_index]}")
     print("Started with tracking" if settings.tracking_enabled else "Started without tracking")
@@ -132,10 +134,7 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
         # Mirror the frame for webcams, but not for IP cameras or video files
         if isinstance(settings.current_camera(), int):
             frame = cv2.flip(frame, 1)
-        # crop to portrait
-        #frame = crop_to_portrait(frame)
-        # Rotate the frame
-        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         
         # Apply the function to the frame
         func = funcs[settings.func_index]  # Get the current function to apply
@@ -156,15 +155,7 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
 
         # Render settings on the frame if enabled
         frame = render_settings(frame, settings)
-        # Resize the frame to fit the screen
-        frame = cv2.resize(frame, (2160, 3840), interpolation=cv2.INTER_LINEAR)
-        # 1) Create a named window that allows resizing
-        cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
-        # 2) Resize the window to fit the screen size
-        #screen_res = (2160, 3840)
-        #cv2.resizeWindow("Computer Vision Demo", screen_res[0], screen_res[1])
-         # Set to full screen
-        cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        
         # Display the processed frame
         cv2.imshow('Computer Vision Demo', frame)
 

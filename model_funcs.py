@@ -157,7 +157,8 @@ def pose_detect_track(img, pose_model: YOLO, detect_model: YOLO, device, plot_co
     # Plot the pose results
     for result in pose_results:
         annotated_frame = result.plot(img=img,
-                                      font='Avenir Next Condensed.ttc',
+                                      font_size=12,
+                                      font="Avenir Next Condensed.ttc",
                                       labels=plot_config.labels, 
                                       boxes=plot_config.boxes, 
                                       probs=plot_config.probs, 
@@ -167,6 +168,8 @@ def pose_detect_track(img, pose_model: YOLO, detect_model: YOLO, device, plot_co
     # Plot the filtered detection results
     for result in filtered_detect_results:
         annotated_frame = result.plot(img=annotated_frame, 
+                                      font_size=12,
+                                      font="Avenir Next Condensed.ttc",
                                       labels=plot_config.labels, 
                                       boxes=plot_config.boxes, 
                                       probs=plot_config.probs, 
