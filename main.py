@@ -18,7 +18,7 @@ def render_settings(frame, settings: AppSettings):
     h, w = frame.shape[:2]
     
     # Background for text
-    cv2.rectangle(overlay, (10, 10), (300, 200), (0, 0, 0), -1)
+    cv2.rectangle(overlay, (10, 10), (1000, 200), (0, 0, 0), -1)
     
     # Add status text
     status_lines = settings.get_status_text()
@@ -125,6 +125,9 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
     if not cap.isOpened():
         print(f"Error: Could not open camera {settings.current_camera()}")
         return
+    
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
 
     cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
     cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -151,8 +154,6 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
         if isinstance(settings.current_camera(), int):
             frame = cv2.flip(frame, 1)
                 # Set the camera properties if needed (e.g., resolution)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
             if settings.rotation_direction == "clockwise":
                 frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             else:
@@ -160,8 +161,6 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
         else:
             # For external cameras, resize to fill the monitor width (landscape)
             frame = resize_to_monitor(frame, monitor_width=2160)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2160)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame.shape[1])
         
         # Apply the function to the frame
         func = funcs[settings.func_index]  # Get the current function to apply
@@ -234,6 +233,14 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
             cap = cv2.VideoCapture(prev_cam)
             if not cap.isOpened():
                 print(f"Error: Could not open camera {settings.camera_names[settings.cam_index]}")
+                    # Mirror the frame for webcams, then rotate based on the set rotation direction
+            if isinstance(settings.current_camera(), int):
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+            else:
+                # For external cameras, resize to fill the monitor width (landscape)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2160)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 3840)
         elif key == ord('.'):  # Switch to next camera
             cap.release()
             next_cam = settings.next_camera()
@@ -241,6 +248,13 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
             cap = cv2.VideoCapture(next_cam)
             if not cap.isOpened():
                 print(f"Error: Could not open camera {settings.camera_names[settings.cam_index]}")
+            if isinstance(settings.current_camera(), int):
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+            else:
+                # For external cameras, resize to fill the monitor width (landscape)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2160)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 3840)
             
     cap.release()
     cv2.destroyAllWindows()
