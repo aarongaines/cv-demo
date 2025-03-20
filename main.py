@@ -131,10 +131,13 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
             print(f"Switched to camera: {settings.camera_names[settings.cam_index]}")
             continue
         
-        # Mirror the frame for webcams, but not for IP cameras or video files
+        # Mirror the frame for webcams, then rotate based on the set rotation direction
         if isinstance(settings.current_camera(), int):
             frame = cv2.flip(frame, 1)
-            frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+            if settings.rotation_direction == "clockwise":
+                frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+            else:
+                frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
         
         # Apply the function to the frame
         func = funcs[settings.func_index]  # Get the current function to apply
@@ -184,6 +187,13 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
         elif key == ord('t'):
             settings.tracking_enabled = not settings.tracking_enabled
             print(f"Toggled tracking to {settings.tracking_enabled}")
+        elif key == ord('o'):
+            # Toggle rotation between clockwise and counter-clockwise
+            if settings.rotation_direction == "clockwise":
+                settings.rotation_direction = "counter_clockwise"
+            else:
+                settings.rotation_direction = "clockwise"
+            print(f"Toggled rotation direction to {settings.rotation_direction}")
         elif key == ord('='):
             settings.threshold = min(settings.threshold + 0.01, 1.0)
             print(f"Increased threshold to {settings.threshold:.2f}")
@@ -400,18 +410,11 @@ def main(webcams=None, ip_cams=None, videos=None, cam_source=0, pose_model='tiny
     # Load the models based on the specified sizes
     pose_model_obj = load_model(model_dict['pose'][pose_model])
     detect_model_obj = load_model(model_dict['detect'][detect_model])
-    segment_model_obj = load_model(model_dict['segment'][segment_model])
-    pose_track_model_obj = load_model(model_dict['pose'][pose_model])  # For pose and detect tracking
-    detect_track_model_obj = load_model(model_dict['detect'][detect_model])  # For pose and detect tracking
 
     # Define the functions to apply to each frame
     def pose_and_detect_func(img, plot_config, threshold):
         return pose_and_detect(img, pose_model_obj, detect_model_obj, device, plot_config, threshold)
-    def segment_func(img, plot_config, threshold):
-        return segment(img, segment_model_obj, device, plot_config, threshold)
-    def pose_detect_track_func(img, plot_config, threshold):
-        return pose_detect_track(img, pose_track_model_obj, detect_track_model_obj, device, plot_config, threshold)
-    funcs = [pose_and_detect_func, pose_detect_track_func, segment_func]
+    funcs = [pose_and_detect_func,]
 
     # Run the camera with the defined functions
     run_cam(settings, funcs)

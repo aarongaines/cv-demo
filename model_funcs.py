@@ -24,15 +24,17 @@ class AppSettings:
     # Processing settings
     tracking_enabled: bool = False
     threshold: float = 0.5
+    # New field to control rotation direction: either "clockwise" or "counter_clockwise"
+    rotation_direction: str = "counter_clockwise"
     # Application state
     func_index: int = 0
     cam_index: int = 0
     show_controls: bool = False
-    
+
     # Camera sources list (will be populated in main)
     camera_sources: List[Union[int, str]] = field(default_factory=list)
     camera_names: List[str] = field(default_factory=list)
-    
+
     # Controls description for display
     control_descriptions = {
         '1/2': 'Switch functions',
@@ -41,12 +43,13 @@ class AppSettings:
         'p': 'Toggle probabilities',
         'c': 'Change color mode',
         't': 'Toggle tracking',
+        'o': 'Toggle rotation direction',  # New control
         '+/-': 'Adjust threshold',
         'h': 'Show/hide this help',
         '</>': 'Switch cameras',
         'ESC': 'Quit'
     }
-    
+
     def get_status_text(self):
         """Generate text describing current settings"""
         status_lines = [
@@ -57,7 +60,8 @@ class AppSettings:
             f"Labels: {'ON' if self.plot_config.labels else 'OFF'}",
             f"Boxes: {'ON' if self.plot_config.boxes else 'OFF'}",
             f"Probabilities: {'ON' if self.plot_config.probs else 'OFF'}",
-            f"Color Mode: {self.plot_config.color_mode}"
+            f"Color Mode: {self.plot_config.color_mode}",
+            f"Rotation: {self.rotation_direction}"
         ]
         return status_lines
     
@@ -159,6 +163,7 @@ def pose_detect_track(img, pose_model: YOLO, detect_model: YOLO, device, plot_co
         annotated_frame = result.plot(img=img,
                                       font_size=12,
                                       font="Avenir Next Condensed.ttc",
+                                      kpt_radius=10,
                                       labels=plot_config.labels, 
                                       boxes=plot_config.boxes, 
                                       probs=plot_config.probs, 
