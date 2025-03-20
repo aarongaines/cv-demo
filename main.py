@@ -86,6 +86,24 @@ def resize_and_pad(image, target_size=(2160, 3840)):
     return padded_image
 
 
+def resize_to_monitor(frame, monitor_width=2160):
+    """
+    Resize the frame to fill monitor width, preserving aspect ratio.
+    
+    Args:
+        frame (np.ndarray): Input frame.
+        monitor_width (int): The target monitor width in pixels.
+        
+    Returns:
+        np.ndarray: Resized frame.
+    """
+    orig_h, orig_w = frame.shape[:2]
+    scale = monitor_width / orig_w
+    new_height = int(orig_h * scale)
+    resized = cv2.resize(frame, (monitor_width, new_height))
+    return resized
+
+
 def run_cam(settings: AppSettings, funcs: List[Callable]):
     """
     Run the camera and apply specified functions to each frame.
@@ -107,16 +125,14 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
     if not cap.isOpened():
         print(f"Error: Could not open camera {settings.current_camera()}")
         return
-    # Set the camera properties if needed (e.g., resolution)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+
     cv2.namedWindow("Computer Vision Demo", cv2.WINDOW_NORMAL)
     cv2.setWindowProperty('Computer Vision Demo', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
     print("Streaming...")
     print(f"Camera: {settings.camera_names[settings.cam_index]}")
     print("Started with tracking" if settings.tracking_enabled else "Started without tracking")
     #print cap size
-    print(f"Camera size: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)} x {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
+    # print(f"Camera size: {cap.get(cv2.CAP_PROP_FRAME_WIDTH)} x {cap.get(cv2.CAP_PROP_FRAME_HEIGHT)}")
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -134,10 +150,18 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
         # Mirror the frame for webcams, then rotate based on the set rotation direction
         if isinstance(settings.current_camera(), int):
             frame = cv2.flip(frame, 1)
+                # Set the camera properties if needed (e.g., resolution)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
             if settings.rotation_direction == "clockwise":
                 frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             else:
                 frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        else:
+            # For external cameras, resize to fill the monitor width (landscape)
+            frame = resize_to_monitor(frame, monitor_width=2160)
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 2160)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, frame.shape[1])
         
         # Apply the function to the frame
         func = funcs[settings.func_index]  # Get the current function to apply
@@ -209,7 +233,7 @@ def run_cam(settings: AppSettings, funcs: List[Callable]):
             print(f"Switching to camera: {settings.camera_names[settings.cam_index]}")
             cap = cv2.VideoCapture(prev_cam)
             if not cap.isOpened():
-                                print(f"Error: Could not open camera {settings.camera_names[settings.cam_index]}")
+                print(f"Error: Could not open camera {settings.camera_names[settings.cam_index]}")
         elif key == ord('.'):  # Switch to next camera
             cap.release()
             next_cam = settings.next_camera()
